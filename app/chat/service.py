@@ -17,18 +17,12 @@ llm = ChatGoogleGenerativeAI(
 )
 
 UNCLEAR_MARKER = "CLARIFY_UNCLEAR:"
-FALLBACK_QUESTION = "I didn't understand that. Are you looking for a provider?"
+FALLBACK_QUESTION = "Didn't understand. What provider or service are you looking for?"
 
 OFFTOPIC_MARKER = "REFUSE_OFFTOPIC:"
-OFFTOPIC_REFUSAL = (
-    "I can only help with finding service providers. "
-    "Please ask me something related to that."
-)
+OFFTOPIC_REFUSAL = "I can only help find service providers."
 
-BLOCKED_MESSAGE = (
-    "This chat has been blocked due to a security policy violation. "
-    "Please start a new chat to continue."
-)
+BLOCKED_MESSAGE = "Chat blocked. Start a new chat to continue."
 
 SUSPICIOUS_PATTERNS = [
     r"\bpassword(s)?\b",
@@ -56,6 +50,8 @@ def _looks_suspicious(message: str) -> bool:
 
 SYSTEM_PROMPT = (
     "You are an assistant that helps users find service providers from a database. "
+    "Keep replies short and direct — answer in 1-3 sentences, no filler or "
+    "unnecessary pleasantries.\n\n"
     "If the user's request is vague or missing details needed to find the right "
     "provider (such as what kind of service, profession, domain, or specific need "
     "they're looking for), do NOT guess or search blindly — ask a short clarifying "
