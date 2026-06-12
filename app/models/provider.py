@@ -29,3 +29,13 @@ class ProviderResponse(BaseModel):
     profession: str
     domain: str
     message: str
+
+
+class ProviderListItem(BaseModel):
+    id: str
+    name: str
+    profession: str
+    work_description: str
+    reliability_score: float
+    keywords: list[str]
+    domain: str
