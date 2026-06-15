@@ -8,7 +8,7 @@ class ProviderCreate(BaseModel):
     profession: str
     work_description: str
     reliability_score: float = Field(ge=0.0, le=5.0)
-    keywords: list[str]
+    keywords: list[str] = Field(min_length=5)
     domain: str  # e.g. "tech", "legal", "medical", "finance"
 
 

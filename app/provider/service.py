@@ -105,7 +105,9 @@ async def search_providers(query: str, limit: int = 5) -> list[dict]:
     ]
 
     words = [
-        re.escape(w) for w in re.findall(r"\w+", query.lower()) if w not in STOPWORDS
+        re.escape(w)
+        for w in re.findall(r"\w+", query.lower())
+        if w not in STOPWORDS and len(w) > 2
     ]
 
     vector_results = []
@@ -134,9 +136,30 @@ async def search_providers(query: str, limit: int = 5) -> list[dict]:
                 for word in words
             ]
         }
-        keyword_results = await db["providers"].find(
+        candidates = await db["providers"].find(
             keyword_filter, {"embedding": 0}
-        ).limit(limit).to_list(length=limit)
+        ).to_list(length=None)
+
+        def _relevance(doc: dict) -> int:
+            profession = doc.get("profession", "").lower()
+            keywords_text = " ".join(doc.get("keywords", [])).lower()
+            work_description = doc.get("work_description", "").lower()
+            name = doc.get("name", "").lower()
+            domain = doc.get("domain", "").lower()
+            score = 0
+            for word in words:
+                if re.search(word, profession) or re.search(word, keywords_text):
+                    score += 3
+                elif re.search(word, work_description) or re.search(word, name):
+                    score += 2
+                elif re.search(word, domain):
+                    score += 1
+            return score
+
+        candidates.sort(key=_relevance, reverse=True)
+        keyword_results = candidates[:limit]
+
+    keyword_ids = {str(doc["_id"]) for doc in keyword_results}
 
     merged: dict[str, dict] = {}
     for doc in vector_results + keyword_results:
@@ -145,6 +168,7 @@ async def search_providers(query: str, limit: int = 5) -> list[dict]:
     providers = []
     for doc_id, doc in merged.items():
         doc["_id"] = doc_id
+        doc["matched_by_keyword"] = doc_id in keyword_ids
         providers.append(doc)
 
     return providers[:limit]
